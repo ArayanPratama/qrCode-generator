@@ -30,40 +30,50 @@
 
 
 
-import qr from "qr-image";
-import fs from "fs";
-import path from "path";
+import inquirer from 'inquirer';
+import qr from 'qr-image';
+import fs from 'fs';
 
-// Ambil URL dari argumen baris perintah
-const url = process.argv[2];
+async function main() {
+  // Mengambil URL dari argumen baris perintah
+  const url = process.argv[2];
 
-if (!url) {
-  console.error("Please provide a URL as an argument.");
-  process.exit(1);
+  if (!url) {
+    console.error("Please provide a URL as an argument.");
+    process.exit(1);
+  }
+
+  // Menanyakan nama file untuk gambar QR Code
+  const { qrFileName, urlFileName } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'qrFileName',
+      message: 'Enter the filename for the QR code image ("YourFileName.png"):',
+      validate: (input) => input.trim() !== '' ? true : 'Filename cannot be empty.'
+    },
+    {
+      type: 'input',
+      name: 'urlFileName',
+      message: 'Enter the filename for the URL text file ("YourFileName.txt"):',
+      validate: (input) => input.trim() !== '' ? true : 'Filename cannot be empty.'
+    }
+  ]);
+
+  // Menampilkan URL yang dimasukkan
+  console.log("URL entered:", url);
+
+  // Menghasilkan QR Code
+  const qr_svg = qr.image(url, { type: 'png' });
+  qr_svg.pipe(fs.createWriteStream(qrFileName));
+
+  // Menyimpan URL ke file teks
+  fs.writeFile(urlFileName, url, (err) => {
+    if (err) throw err;
+    console.log(`The file ${urlFileName} has been saved!`);
+  });
 }
 
-// Fungsi untuk mendapatkan nomor urut berikutnya
-const getNextIndex = () => {
-  const files = fs.readdirSync('.').filter(file => file.startsWith('qr_img_') && file.endsWith('.png'));
-  const indices = files.map(file => parseInt(file.replace(/^qr_img_|\.png$/g, ''), 10));
-  const maxIndex = Math.max(0, ...indices);
-  return maxIndex + 1;
-};
+// Menjalankan fungsi utama
+main();
 
-// Tambahkan nomor urut ke nama file untuk memastikan nama file unik
-const index = getNextIndex();
-const qrFileName = `qr_img_${index}.png`;
-const urlFileName = `URL_${index}.txt`;
-
-console.log("URL entered:", url); // Tambahan untuk debugging
-
-// Menghasilkan QR Code
-var qr_svg = qr.image(url, { type: 'png' });
-qr_svg.pipe(fs.createWriteStream(qrFileName));
-
-// Menyimpan URL ke file teks~
-fs.writeFile(urlFileName, url, (err) => {
-  if (err) throw err;
-  console.log(`The file ${urlFileName} has been saved!`);
-});
 
