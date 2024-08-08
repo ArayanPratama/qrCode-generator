@@ -39,7 +39,7 @@ async function main() {
   const url = process.argv[2];
 
   if (!url) {
-    console.error("Please provide a URL as an argument.");
+    console.error("Tolong masukan URL sebagai argumen.");
     process.exit(1);
   }
 
